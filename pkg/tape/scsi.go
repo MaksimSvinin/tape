@@ -56,7 +56,7 @@ type SCSIInquiryReturn struct {
 
 // copy of sg.OpenScsiDevice() but with RDONLY instead of O_RDWR.
 func OpenScsiDeviceRO(fname string) (*os.File, error) {
-	f, err := os.OpenFile(fname, os.O_RDONLY|os.O_WRONLY, 0)
+	f, err := os.OpenFile(fname, os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
