@@ -1,7 +1,5 @@
 github.com/HewlettPackard/structex v1.0.4 h1:RVTdN5FWhDWr1IkjllU8wxuLjISo4gr6u5ryZpzyHcA=
 github.com/HewlettPackard/structex v1.0.4/go.mod h1:3frC4RY/cPsP/4+N8rkxsNAGlQwHV+zDC7qvrN+N+rE=
-github.com/benmcclelland/mt v0.0.0-20161014175435-1a3d9d522857 h1:xwHJkLgh04NAQoMMuqdGrgl+FRG6OQcXZQLjbFXcOBo=
-github.com/benmcclelland/mt v0.0.0-20161014175435-1a3d9d522857/go.mod h1:2qDx2OEWixU1520CX4pwynWWO3Fle1APdiIcIdvPTZs=
 github.com/benmcclelland/sgio v0.0.0-20180629175614-f710aebf64c1 h1:f1AIRyf6d21xBd1DirrIa6fk41O3LB0WvVuVqhPN4co=
 github.com/benmcclelland/sgio v0.0.0-20180629175614-f710aebf64c1/go.mod h1:WdrapyVn/Aduwwf/OMW6sEtk9+7BSoMst1kGrx4E4xE=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=

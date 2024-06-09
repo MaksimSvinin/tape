@@ -9,13 +9,16 @@ import (
 
 	"github.com/HewlettPackard/structex"
 	"github.com/MaximSvinin/tape/pkg/model"
-	"github.com/benmcclelland/mt"
 	"github.com/benmcclelland/sgio"
 )
 
 const (
 	devSt  = "/dev/st0"
 	mtPath = "/bin/mt"
+
+	eraseCommand  = "erase"
+	rewindCpmmand = "rewind"
+	ejectCommand  = "eject"
 )
 
 type Tape interface {
@@ -24,13 +27,12 @@ type Tape interface {
 	Write(file io.Reader) (int64, error)
 	Read() (io.ReadCloser, error)
 
-	Erase() error
-	Rewind() error
-	Eject() error
+	Erase() ([]byte, error)
+	Rewind() ([]byte, error)
+	Eject() ([]byte, error)
 }
 
 type tape struct {
-	mt *mt.Drive
 	cm *Cm
 
 	m         sync.Mutex
@@ -41,7 +43,6 @@ type tape struct {
 func NewTapeStorage() Tape {
 	return &tape{
 		cm: NewCm(),
-		mt: mt.NewDriveCmd(devSt, mtPath),
 		m:  sync.Mutex{},
 	}
 }
@@ -123,27 +124,27 @@ func (t *tape) Read() (io.ReadCloser, error) {
 	return f, nil
 }
 
-func (t *tape) Erase() error {
+func (t *tape) Erase() ([]byte, error) {
 	t.m.Lock()
 	defer t.unlock()
 	t.operation = model.Erase
 
-	return t.mt.Erase()
+	return mtCmd(mtPath, devSt, eraseCommand)
 }
 
-func (t *tape) Rewind() error {
+func (t *tape) Rewind() ([]byte, error) {
 	t.m.Lock()
 	defer t.unlock()
 	t.operation = model.Rewind
 
-	return t.mt.Rewind()
+	return mtCmd(mtPath, devSt, rewindCpmmand)
 }
 
-func (t *tape) Eject() error {
+func (t *tape) Eject() ([]byte, error) {
 	t.m.Lock()
 	defer t.unlock()
 
-	return t.mt.Eject()
+	return mtCmd(mtPath, devSt, ejectCommand)
 }
 
 func (t *tape) unlock() {
