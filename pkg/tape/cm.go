@@ -2,8 +2,11 @@ package tape
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/MaximSvinin/tape/pkg/model"
 )
@@ -331,8 +334,9 @@ func NewCm() *Cm {
 	return cm
 }
 
-func (cm *Cm) GetOptions() *model.TapeInfo {
-	out := new(model.TapeInfo)
+func (cm *Cm) GetAttributes() *model.Attributes {
+	out := new(model.Attributes)
+	out.SerialNo = cm.SerialNo.DataStr
 
 	cm.addCap(out)
 	cm.addType(out)
@@ -343,7 +347,20 @@ func (cm *Cm) GetOptions() *model.TapeInfo {
 	return out
 }
 
-func (cm *Cm) addSessions(out *model.TapeInfo) {
+func (cm *Cm) ReadAttributes(infoDrive *os.File) error {
+	var outErr error
+
+	for i := range cm.attributes {
+		err := GetAttribute(cm.attributes[i], infoDrive)
+		if err != nil {
+			outErr = multierror.Append(err)
+		}
+	}
+
+	return outErr
+}
+
+func (cm *Cm) addSessions(out *model.Attributes) {
 	out.Sessions = make([]*model.SessionAttribute, 0, 4)
 	for i, load := range []*CmAttr{cm.DeviceAtLoadN0, cm.DeviceAtLoadN1, cm.DeviceAtLoadN2, cm.DeviceAtLoadN3} {
 		if load.IsValid {
@@ -363,7 +380,7 @@ func (cm *Cm) addSessions(out *model.TapeInfo) {
 	}
 }
 
-func (cm *Cm) addCap(out *model.TapeInfo) {
+func (cm *Cm) addCap(out *model.Attributes) {
 	if cm.PartCapRemain.IsValid {
 		out.PartCapRemain = &model.CapAttribute{
 			Name:  cm.PartCapRemain.Name,
@@ -435,7 +452,7 @@ func (cm *Cm) addCap(out *model.TapeInfo) {
 	}
 }
 
-func (cm *Cm) addType(out *model.TapeInfo) {
+func (cm *Cm) addType(out *model.Attributes) {
 	if cm.Type.IsValid {
 		friendlyName := "Unknown"
 		switch cm.Type.DataInt {
@@ -456,7 +473,7 @@ func (cm *Cm) addType(out *model.TapeInfo) {
 	}
 }
 
-func (cm *Cm) addSpecs(out *model.TapeInfo) {
+func (cm *Cm) addSpecs(out *model.Attributes) {
 	var specs SpecsType
 	specs.IsValid = false
 	if cm.MediumDensity.IsValid {
@@ -503,7 +520,7 @@ func (cm *Cm) addSpecs(out *model.TapeInfo) {
 	}
 }
 
-func (cm *Cm) addOrg(out *model.TapeInfo) {
+func (cm *Cm) addOrg(out *model.Attributes) {
 	if cm.AssigningOrg.IsValid {
 		out.AssigningOrg = &model.StrAttribute{
 			Name:  cm.AssigningOrg.Name,
@@ -528,8 +545,10 @@ func (cm *Cm) addOrg(out *model.TapeInfo) {
 				cm.ManufactureDate.DataStr[0:4], cm.ManufactureDate.DataStr[4:6], cm.ManufactureDate.DataStr[6:8])
 		}
 	}
-	out.ManufactureDate = &model.StrAttribute{
-		Name:  cm.ManufactureDate.Name,
-		Value: manufactureDate,
+	if manufactureDate != "" {
+		out.ManufactureDate = &model.StrAttribute{
+			Name:  cm.ManufactureDate.Name,
+			Value: manufactureDate,
+		}
 	}
 }

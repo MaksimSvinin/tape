@@ -4,5 +4,9 @@ github.com/benmcclelland/mt v0.0.0-20161014175435-1a3d9d522857 h1:xwHJkLgh04NAQo
 github.com/benmcclelland/mt v0.0.0-20161014175435-1a3d9d522857/go.mod h1:2qDx2OEWixU1520CX4pwynWWO3Fle1APdiIcIdvPTZs=
 github.com/benmcclelland/sgio v0.0.0-20180629175614-f710aebf64c1 h1:f1AIRyf6d21xBd1DirrIa6fk41O3LB0WvVuVqhPN4co=
 github.com/benmcclelland/sgio v0.0.0-20180629175614-f710aebf64c1/go.mod h1:WdrapyVn/Aduwwf/OMW6sEtk9+7BSoMst1kGrx4E4xE=
+github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
+github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
+github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
+github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

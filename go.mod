@@ -8,4 +8,9 @@ require (
 	github.com/benmcclelland/sgio v0.0.0-20180629175614-f710aebf64c1
 )
 
-require github.com/pkg/errors v0.9.1 // indirect
+require github.com/hashicorp/errwrap v1.0.0 // indirect
+
+require (
+	github.com/hashicorp/go-multierror v1.1.1
+	github.com/pkg/errors v0.9.1 // indirect
+)

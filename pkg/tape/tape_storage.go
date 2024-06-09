@@ -2,6 +2,7 @@ package tape
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -17,16 +18,8 @@ const (
 	mtPath = "/bin/mt"
 )
 
-type StorageInfo struct {
-	Vendor   string
-	Model    string
-	Firmware string
-
-	Attributes *model.TapeInfo
-}
-
 type Tape interface {
-	Info() (*StorageInfo, error)
+	Info() (*model.TapeInfo, error)
 
 	Write(file io.Reader) (int64, error)
 	Read() (io.ReadCloser, error)
@@ -39,20 +32,27 @@ type Tape interface {
 type tape struct {
 	mt *mt.Drive
 	cm *Cm
-	m  sync.Mutex
+
+	m         sync.Mutex
+	operation model.Operation
 }
 
 // локальный стример ленты.
-func NewTapeStorage() (Tape, error) {
+func NewTapeStorage() Tape {
 	return &tape{
 		cm: NewCm(),
 		mt: mt.NewDriveCmd(devSt, mtPath),
-	}, nil
+		m:  sync.Mutex{},
+	}
 }
 
-func (t *tape) Info() (*StorageInfo, error) {
+func (t *tape) Info() (*model.TapeInfo, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	defer func() {
+		t.operation = model.Unknown
+		t.m.Unlock()
+	}()
+	t.operation = model.Info
 
 	infoDrive, err := OpenScsiDeviceRO(devSt)
 	if err != nil {
@@ -82,25 +82,24 @@ func (t *tape) Info() (*StorageInfo, error) {
 		return nil, err
 	}
 
-	for i := range t.cm.attributes {
-		err = GetAttribute(t.cm.attributes[i], infoDrive)
-		if err != nil {
-			continue
-		}
+	err = t.cm.ReadAttributes(infoDrive)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	return &StorageInfo{
+	return &model.TapeInfo{
 		Vendor:   strings.Trim(string(parsed.VendorID[:]), " \u0000"),
 		Model:    strings.Trim(string(parsed.ProductID[:]), " \u0000"),
 		Firmware: strings.Trim(string(parsed.ProductRevision[:]), " \u0000"),
 
-		Attributes: t.cm.GetOptions(),
+		Attributes: t.cm.GetAttributes(),
 	}, nil
 }
 
 func (t *tape) Write(file io.Reader) (int64, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	defer t.unlock()
+	t.operation = model.Write
 
 	f, _, err := OpenTapeWriteOnly(devSt)
 	if err != nil {
@@ -113,7 +112,8 @@ func (t *tape) Write(file io.Reader) (int64, error) {
 
 func (t *tape) Read() (io.ReadCloser, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	defer t.unlock()
+	t.operation = model.Read
 
 	f, _, err := OpenTapeReadOnly(devSt)
 	if err != nil {
@@ -124,13 +124,29 @@ func (t *tape) Read() (io.ReadCloser, error) {
 }
 
 func (t *tape) Erase() error {
+	t.m.Lock()
+	defer t.unlock()
+	t.operation = model.Erase
+
 	return t.mt.Erase()
 }
 
 func (t *tape) Rewind() error {
+	t.m.Lock()
+	defer t.unlock()
+	t.operation = model.Rewind
+
 	return t.mt.Rewind()
 }
 
 func (t *tape) Eject() error {
+	t.m.Lock()
+	defer t.unlock()
+
 	return t.mt.Eject()
+}
+
+func (t *tape) unlock() {
+	t.operation = model.Unknown
+	t.m.Unlock()
 }
