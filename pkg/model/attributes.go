@@ -2,7 +2,7 @@ package model
 
 type CapAttribute struct {
 	Name  string `json:"name,omitempty"`
-	Value uint64 `json:"value,omitempty"`
+	Value uint64 `json:"value"`
 }
 
 type StrAttribute struct {
@@ -18,39 +18,39 @@ type MediumDensityAttribute struct {
 
 type MAMCapacityAttribute struct {
 	Name           string  `json:"name,omitempty"`
-	Capacity       uint64  `json:"capacity,omitempty"`
+	Capacity       uint64  `json:"capacity"`
 	SpaceRemaining *uint64 `json:"spaceRemaining,omitempty"`
 }
 
 type SpecsCapacityAttribute struct {
 	Name           string `json:"name,omitempty"`
-	Native         int    `json:"native,omitempty"`
-	Compressed     int    `json:"compressed,omitempty"`
+	Native         int    `json:"native"`
+	Compressed     int    `json:"compressed"`
 	CompressFactor string `json:"compressFactor,omitempty"`
 }
 
 type SpecsSpeedAttribute struct {
 	Name       string `json:"name,omitempty"`
-	Native     int    `json:"native,omitempty"`
-	Compressed int    `json:"compressed,omitempty"`
+	Native     int    `json:"native"`
+	Compressed int    `json:"compressed"`
 }
 
 type SpecsPartitionsAttribute struct {
 	Name            string `json:"name,omitempty"`
-	PartitionNumber int    `json:"partitionNumber,omitempty"`
+	PartitionNumber int    `json:"partitionNumber"`
 }
 
 type SpecsPhyAttribute struct {
 	Name          string `json:"name,omitempty"`
-	BandsPerTape  int    `json:"bandsPerTape,omitempty"`
-	WrapsPerBand  int    `json:"wrapsPerBand,omitempty"`
-	TracksPerWrap int    `json:"tracksPerWrap,omitempty"`
-	Total         int    `json:"total,omitempty"`
+	BandsPerTape  int    `json:"bandsPerTape"`
+	WrapsPerBand  int    `json:"wrapsPerBand"`
+	TracksPerWrap int    `json:"tracksPerWrap"`
+	Total         int    `json:"total"`
 }
 
 type SpecsDurationAttribute struct {
 	Name            string `json:"name,omitempty"`
-	FullTapeMinutes int    `json:"fullTapeMinutes,omitempty"`
+	FullTapeMinutes int    `json:"fullTapeMinutes"`
 }
 
 type SpecsAttribute struct {
@@ -62,7 +62,7 @@ type SpecsAttribute struct {
 }
 
 type SessionAttribute struct {
-	Number  int    `json:"number,omitempty"`
+	Number  int    `json:"number"`
 	Devname string `json:"devname,omitempty"`
 	Serial  string `json:"serial,omitempty"`
 }
