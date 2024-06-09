@@ -411,13 +411,13 @@ func (cm *Cm) addCap(out *model.Attributes) {
 
 	if cm.MAMCapacity.IsValid {
 		if cm.MAMSpaceRemaining.IsValid {
-			out.MAMCapacity = model.MAMCapacityAttribute{
+			out.MAMCapacity = &model.MAMCapacityAttribute{
 				Name:           cm.MAMCapacity.Name,
 				Capacity:       cm.MAMCapacity.DataInt,
 				SpaceRemaining: &cm.MAMSpaceRemaining.DataInt,
 			}
 		} else {
-			out.MAMCapacity = model.MAMCapacityAttribute{
+			out.MAMCapacity = &model.MAMCapacityAttribute{
 				Name:           cm.MAMCapacity.Name,
 				Capacity:       cm.MAMCapacity.DataInt,
 				SpaceRemaining: nil,

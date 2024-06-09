@@ -84,7 +84,7 @@ type Attributes struct {
 	TapeLength *CapAttribute `json:"tapeLength,omitempty"`
 	TapeWidth  *CapAttribute `json:"tapeWidth,omitempty"`
 
-	MAMCapacity MAMCapacityAttribute `json:"mAMCapacity,omitempty"`
+	MAMCapacity *MAMCapacityAttribute `json:"mAMCapacity,omitempty"`
 
 	Specs *SpecsAttribute `json:"specs,omitempty"`
 
