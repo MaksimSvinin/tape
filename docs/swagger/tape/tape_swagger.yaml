@@ -1,0 +1,264 @@
+definitions:
+  model.Attributes:
+    properties:
+      assigningOrg:
+        $ref: '#/definitions/model.StrAttribute'
+      cartridgeLoadCount:
+        type: integer
+      cartridgeType:
+        $ref: '#/definitions/model.StrAttribute'
+      mAMCapacity:
+        $ref: '#/definitions/model.MAMCapacityAttribute'
+      manufactureDate:
+        $ref: '#/definitions/model.StrAttribute'
+      manufacturer:
+        $ref: '#/definitions/model.StrAttribute'
+      mediumDensity:
+        $ref: '#/definitions/model.MediumDensityAttribute'
+      partCapMax:
+        $ref: '#/definitions/model.CapAttribute'
+      partCapRemain:
+        $ref: '#/definitions/model.CapAttribute'
+      readSession:
+        $ref: '#/definitions/model.CapAttribute'
+      serialNumber:
+        type: string
+      sessions:
+        items:
+          $ref: '#/definitions/model.SessionAttribute'
+        type: array
+      specs:
+        $ref: '#/definitions/model.SpecsAttribute'
+      tapeLength:
+        $ref: '#/definitions/model.CapAttribute'
+      tapeWidth:
+        $ref: '#/definitions/model.CapAttribute'
+      totalRead:
+        $ref: '#/definitions/model.CapAttribute'
+      totalWritten:
+        $ref: '#/definitions/model.CapAttribute'
+      writtenSession:
+        $ref: '#/definitions/model.CapAttribute'
+    type: object
+  model.CapAttribute:
+    properties:
+      name:
+        type: string
+      value:
+        type: integer
+    type: object
+  model.FileWriteInfo:
+    properties:
+      bytesWrite:
+        type: integer
+      fileNumber:
+        type: integer
+    type: object
+  model.MAMCapacityAttribute:
+    properties:
+      capacity:
+        type: integer
+      name:
+        type: string
+      spaceRemaining:
+        type: integer
+    type: object
+  model.MediumDensityAttribute:
+    properties:
+      formattedAs:
+        type: string
+      mediumformat:
+        type: string
+      name:
+        type: string
+    type: object
+  model.SessionAttribute:
+    properties:
+      devname:
+        type: string
+      number:
+        type: integer
+      serial:
+        type: string
+    type: object
+  model.SpecsAttribute:
+    properties:
+      capacity:
+        $ref: '#/definitions/model.SpecsCapacityAttribute'
+      duration:
+        $ref: '#/definitions/model.SpecsDurationAttribute'
+      partitions:
+        $ref: '#/definitions/model.SpecsPartitionsAttribute'
+      phy:
+        $ref: '#/definitions/model.SpecsPhyAttribute'
+      speed:
+        $ref: '#/definitions/model.SpecsSpeedAttribute'
+    type: object
+  model.SpecsCapacityAttribute:
+    properties:
+      compressFactor:
+        type: string
+      compressed:
+        type: integer
+      name:
+        type: string
+      native:
+        type: integer
+    type: object
+  model.SpecsDurationAttribute:
+    properties:
+      fullTapeMinutes:
+        type: integer
+      name:
+        type: string
+    type: object
+  model.SpecsPartitionsAttribute:
+    properties:
+      name:
+        type: string
+      partitionNumber:
+        type: integer
+    type: object
+  model.SpecsPhyAttribute:
+    properties:
+      bandsPerTape:
+        type: integer
+      name:
+        type: string
+      total:
+        type: integer
+      tracksPerWrap:
+        type: integer
+      wrapsPerBand:
+        type: integer
+    type: object
+  model.SpecsSpeedAttribute:
+    properties:
+      compressed:
+        type: integer
+      name:
+        type: string
+      native:
+        type: integer
+    type: object
+  model.StrAttribute:
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+    type: object
+  model.TapeInfo:
+    properties:
+      attributes:
+        $ref: '#/definitions/model.Attributes'
+      firmware:
+        type: string
+      model:
+        type: string
+      vendor:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Tape manage server.
+  title: Tape api
+  version: "1.0"
+paths:
+  /eject:
+    post:
+      consumes:
+      - application/json
+      description: eject tape
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      summary: eject tape
+      tags:
+      - tm
+  /erase:
+    delete:
+      consumes:
+      - application/json
+      description: erase tape
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      summary: erase tape
+      tags:
+      - tm
+  /info:
+    get:
+      consumes:
+      - application/json
+      description: get tape info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.TapeInfo'
+        "500":
+          description: Internal Server Error
+      summary: get tape info
+      tags:
+      - info
+  /read:
+    get:
+      consumes:
+      - application/json
+      description: read file
+      parameters:
+      - collectionFormat: csv
+        description: file numbers
+        in: query
+        items:
+          type: integer
+        name: numbers
+        type: array
+      - description: path to extract dir
+        in: query
+        name: path
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      summary: read file
+      tags:
+      - file
+  /write:
+    post:
+      consumes:
+      - application/json
+      description: write file
+      parameters:
+      - description: путь до файла
+        in: query
+        name: filePath
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.FileWriteInfo'
+        "500":
+          description: Internal Server Error
+      summary: write file
+      tags:
+      - file
+swagger: "2.0"

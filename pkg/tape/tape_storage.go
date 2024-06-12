@@ -2,49 +2,59 @@ package tape
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"os"
+	"path"
 	"strings"
 	"sync"
 
 	"github.com/HewlettPackard/structex"
-	"github.com/MaximSvinin/tape/pkg/model"
+	"github.com/benmcclelland/mtio"
 	"github.com/benmcclelland/sgio"
+	"github.com/rs/zerolog/log"
+
+	"github.com/MaximSvinin/tape/pkg/model"
 )
 
 const (
-	devSt  = "/dev/st0"
-	mtPath = "/bin/mt"
+	devNst = "/dev/nst0"
 
-	eraseCommand  = "erase"
-	rewindCpmmand = "rewind"
-	ejectCommand  = "eject"
+	bufCount = 32768
 )
 
 type Tape interface {
 	Info() (*model.TapeInfo, error)
 
-	Write(file io.Reader) (int64, error)
-	Read() (io.ReadCloser, error)
+	Write(file io.Reader) (*model.FileWriteInfo, error)
+	Read(fileNumbers []int, patch string) error
 
-	Erase() ([]byte, error)
-	Rewind() ([]byte, error)
-	Eject() ([]byte, error)
+	Erase() error
+	Eject() error
 }
 
 type tape struct {
 	cm *Cm
 
-	m         sync.Mutex
+	m         sync.RWMutex
 	operation model.Operation
 }
 
 // локальный стример ленты.
 func NewTapeStorage() Tape {
 	return &tape{
-		cm: NewCm(),
-		m:  sync.Mutex{},
+		cm:        NewCm(),
+		m:         sync.RWMutex{},
+		operation: model.Unknown,
 	}
+}
+
+func (t *tape) GetOperation() string {
+	t.m.RLock()
+	defer t.m.RUnlock()
+
+	return t.operation.String()
 }
 
 func (t *tape) Info() (*model.TapeInfo, error) {
@@ -55,7 +65,7 @@ func (t *tape) Info() (*model.TapeInfo, error) {
 	}()
 	t.operation = model.Info
 
-	infoDrive, err := OpenScsiDeviceRO(devSt)
+	infoDrive, err := OpenScsiDeviceRO(devNst)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +95,7 @@ func (t *tape) Info() (*model.TapeInfo, error) {
 
 	err = t.cm.ReadAttributes(infoDrive)
 	if err != nil {
-		fmt.Println(err)
+		log.Warn().Err(err).Msg("warn read attributes")
 	}
 
 	return &model.TapeInfo{
@@ -97,54 +107,199 @@ func (t *tape) Info() (*model.TapeInfo, error) {
 	}, nil
 }
 
-func (t *tape) Write(file io.Reader) (int64, error) {
+func (t *tape) Write(file io.Reader) (*model.FileWriteInfo, error) {
 	t.m.Lock()
 	defer t.unlock()
 	t.operation = model.Write
 
-	f, _, err := OpenTapeWriteOnly(devSt)
+	f, _, err := OpenTapeWriteOnly(devNst)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	defer f.Close()
 
-	return f.ReadFrom(file)
-}
-
-func (t *tape) Read() (io.ReadCloser, error) {
-	t.m.Lock()
-	defer t.unlock()
-	t.operation = model.Read
-
-	f, _, err := OpenTapeReadOnly(devSt)
+	err = t.eom(f)
 	if err != nil {
 		return nil, err
 	}
 
-	return f, nil
+	n, err := f.ReadFrom(file)
+	if err != nil {
+		return nil, err
+	}
+
+	err = t.eof(f)
+	if err != nil {
+		return nil, err
+	}
+
+	status, err := mtio.GetStatus(f)
+	if err != nil {
+		return nil, err
+	}
+	return &model.FileWriteInfo{
+		FileNo:     status.FileNo,
+		BytesWrite: n,
+	}, nil
 }
 
-func (t *tape) Erase() ([]byte, error) {
+func (t *tape) Read(fileNumbers []int, patch string) error {
+	t.m.Lock()
+	defer t.m.Unlock()
+	t.operation = model.Read
+
+	f, _, err := OpenTapeReadOnly(devNst)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = t.rewind(f)
+	if err != nil {
+		return err
+	}
+
+	if len(fileNumbers) == 0 {
+		return t.extractAllFiles(f, patch)
+	}
+
+	fileNumbersMap := make(map[int]struct{})
+	maxFileNumber := 0
+	for i := range fileNumbers {
+		fileNumbersMap[fileNumbers[i]] = struct{}{}
+		if maxFileNumber < fileNumbers[i] {
+			maxFileNumber = fileNumbers[i]
+		}
+	}
+	return t.extractFiles(f, patch, maxFileNumber, fileNumbersMap)
+}
+
+func (t *tape) Erase() error {
 	t.m.Lock()
 	defer t.unlock()
 	t.operation = model.Erase
 
-	return mtCmd(mtPath, devSt, eraseCommand)
+	f, _, err := OpenTapeWriteOnly(devNst)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = t.rewind(f)
+	if err != nil {
+		return err
+	}
+	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTERASE)))
 }
 
-func (t *tape) Rewind() ([]byte, error) {
+func (t *tape) Eject() error {
 	t.m.Lock()
 	defer t.unlock()
-	t.operation = model.Rewind
 
-	return mtCmd(mtPath, devSt, rewindCpmmand)
+	f, _, err := OpenTapeReadOnly(devNst)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTOFFL)))
 }
 
-func (t *tape) Eject() ([]byte, error) {
-	t.m.Lock()
-	defer t.unlock()
+func (t *tape) rewind(f *os.File) error {
+	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTREW)))
+}
 
-	return mtCmd(mtPath, devSt, ejectCommand)
+func (t *tape) eom(f *os.File) error {
+	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTEOM)))
+}
+
+func (t *tape) eof(f *os.File) error {
+	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTWEOF)))
+}
+
+func (t *tape) fsf(f *os.File) error {
+	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTFSF)))
+}
+
+func (t *tape) extractAllFiles(f *os.File, patch string) error {
+	i := 1
+	for {
+		outPath := path.Join(patch, fmt.Sprintf("file%d", i))
+		log.Info().Str("outPath", outPath).Msg("create out file")
+
+		stop, err := t.readData(f, outPath)
+		if err != nil {
+			return err
+		}
+		if stop {
+			err = os.Remove(outPath)
+			if err != nil {
+				return err
+			}
+			break
+		}
+		i++
+	}
+	return nil
+}
+
+func (t *tape) extractFiles(
+	f *os.File,
+	patch string,
+	maxFileNumber int,
+	fileNumbersMap map[int]struct{},
+) error {
+	for i := range maxFileNumber {
+		i++
+
+		if _, ok := fileNumbersMap[i]; ok {
+			outPath := path.Join(patch, fmt.Sprintf("file%d", i))
+			log.Info().Str("outPath", outPath).Msg("create out file")
+
+			_, err := t.readData(f, outPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := t.fsf(f)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *tape) readData(f *os.File, outPath string) (bool, error) {
+	outFile, err := os.Create(outPath)
+	if err != nil {
+		return false, err
+	}
+	defer outFile.Close()
+
+	buf := make([]byte, bufCount)
+	start := true
+
+	for {
+		n, err := f.Read(buf) //nolint:govet //TODO
+		if start && n == 0 {
+			return true, nil
+		}
+		start = false
+
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return false, err
+		}
+
+		_, err = outFile.Write(buf[:n])
+		if err != nil {
+			return false, err
+		}
+	}
+	return false, nil
 }
 
 func (t *tape) unlock() {
