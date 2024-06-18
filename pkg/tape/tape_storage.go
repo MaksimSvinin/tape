@@ -189,7 +189,7 @@ func (t *tape) Erase() error {
 	if err != nil {
 		return err
 	}
-	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTERASE)))
+	return mtio.DoOp(f, mtio.NewMtOp(mtio.WithOperation(mtio.MTERASE), mtio.WithCount(1)))
 }
 
 func (t *tape) Eject() error {

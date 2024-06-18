@@ -1,15 +1,5 @@
 package model
 
-type CapAttribute struct {
-	Name  string `json:"name,omitempty"`
-	Value uint64 `json:"value"`
-}
-
-type StrAttribute struct {
-	Name  string `json:"name,omitempty"`
-	Value string `json:"value,omitempty"`
-}
-
 type MediumDensityAttribute struct {
 	Name         string `json:"name,omitempty"`
 	Mediumformat string `json:"mediumformat,omitempty"`
@@ -70,31 +60,31 @@ type SessionAttribute struct {
 type Attributes struct {
 	SerialNo string `json:"serialNumber,omitempty"`
 
-	PartCapRemain *CapAttribute `json:"partCapRemain,omitempty"`
-	PartCapMax    *CapAttribute `json:"partCapMax,omitempty"`
+	PartCapRemain *uint64 `json:"partCapRemain,omitempty"` // Свободное место в байтах
+	PartCapMax    *uint64 `json:"partCapMax,omitempty"` // Всего места в байтах
 
 	MediumDensity *MediumDensityAttribute `json:"mediumDensity,omitempty"`
 
-	CartridgeType *StrAttribute `json:"cartridgeType,omitempty"`
+	CartridgeType string `json:"cartridgeType,omitempty"`
 
-	AssigningOrg    *StrAttribute `json:"assigningOrg,omitempty"`
-	Manufacturer    *StrAttribute `json:"manufacturer,omitempty"`
-	ManufactureDate *StrAttribute `json:"manufactureDate,omitempty"`
+	AssigningOrg    string `json:"assigningOrg,omitempty"`
+	Manufacturer    string `json:"manufacturer,omitempty"`
+	ManufactureDate string `json:"manufactureDate,omitempty"`
 
-	TapeLength *CapAttribute `json:"tapeLength,omitempty"`
-	TapeWidth  *CapAttribute `json:"tapeWidth,omitempty"`
+	TapeLength *uint64 `json:"tapeLength,omitempty"` // Длинна ленты в метрах
+	TapeWidth  *uint64 `json:"tapeWidth,omitempty"` // Ширина ленты в милиметрах
 
 	MAMCapacity *MAMCapacityAttribute `json:"mAMCapacity,omitempty"`
 
 	Specs *SpecsAttribute `json:"specs,omitempty"`
 
-	CartridgeLoadCount uint64 `json:"cartridgeLoadCount,omitempty"`
+	CartridgeLoadCount *uint64 `json:"cartridgeLoadCount,omitempty"`
 
-	TotalWritten *CapAttribute `json:"totalWritten,omitempty"`
-	TotalRead    *CapAttribute `json:"totalRead,omitempty"`
+	TotalWritten *uint64 `json:"totalWritten,omitempty"`
+	TotalRead    *uint64 `json:"totalRead,omitempty"`
 
-	WrittenSession *CapAttribute `json:"writtenSession,omitempty"`
-	ReadSession    *CapAttribute `json:"readSession,omitempty"`
+	WrittenSession *uint64 `json:"writtenSession,omitempty"`
+	ReadSession    *uint64 `json:"readSession,omitempty"`
 
 	Sessions []*SessionAttribute `json:"sessions,omitempty"`
 }

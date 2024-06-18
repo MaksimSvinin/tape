@@ -167,34 +167,36 @@ const docTemplatetape = `{
             "type": "object",
             "properties": {
                 "assigningOrg": {
-                    "$ref": "#/definitions/model.StrAttribute"
+                    "type": "string"
                 },
                 "cartridgeLoadCount": {
                     "type": "integer"
                 },
                 "cartridgeType": {
-                    "$ref": "#/definitions/model.StrAttribute"
+                    "type": "string"
                 },
                 "mAMCapacity": {
                     "$ref": "#/definitions/model.MAMCapacityAttribute"
                 },
                 "manufactureDate": {
-                    "$ref": "#/definitions/model.StrAttribute"
+                    "type": "string"
                 },
                 "manufacturer": {
-                    "$ref": "#/definitions/model.StrAttribute"
+                    "type": "string"
                 },
                 "mediumDensity": {
                     "$ref": "#/definitions/model.MediumDensityAttribute"
                 },
                 "partCapMax": {
-                    "$ref": "#/definitions/model.CapAttribute"
+                    "description": "Всего места в байтах",
+                    "type": "integer"
                 },
                 "partCapRemain": {
-                    "$ref": "#/definitions/model.CapAttribute"
+                    "description": "Свободное место в байтах",
+                    "type": "integer"
                 },
                 "readSession": {
-                    "$ref": "#/definitions/model.CapAttribute"
+                    "type": "integer"
                 },
                 "serialNumber": {
                     "type": "string"
@@ -209,29 +211,20 @@ const docTemplatetape = `{
                     "$ref": "#/definitions/model.SpecsAttribute"
                 },
                 "tapeLength": {
-                    "$ref": "#/definitions/model.CapAttribute"
+                    "description": "Длинна ленты в метрах",
+                    "type": "integer"
                 },
                 "tapeWidth": {
-                    "$ref": "#/definitions/model.CapAttribute"
+                    "description": "Ширина ленты в милиметрах",
+                    "type": "integer"
                 },
                 "totalRead": {
-                    "$ref": "#/definitions/model.CapAttribute"
+                    "type": "integer"
                 },
                 "totalWritten": {
-                    "$ref": "#/definitions/model.CapAttribute"
+                    "type": "integer"
                 },
                 "writtenSession": {
-                    "$ref": "#/definitions/model.CapAttribute"
-                }
-            }
-        },
-        "model.CapAttribute": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "value": {
                     "type": "integer"
                 }
             }
@@ -379,17 +372,6 @@ const docTemplatetape = `{
                 },
                 "native": {
                     "type": "integer"
-                }
-            }
-        },
-        "model.StrAttribute": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
                 }
             }
         },

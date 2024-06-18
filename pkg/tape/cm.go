@@ -382,31 +382,22 @@ func (cm *Cm) addSessions(out *model.Attributes) {
 
 func (cm *Cm) addCap(out *model.Attributes) {
 	if cm.PartCapRemain.IsValid {
-		out.PartCapRemain = &model.CapAttribute{
-			Name:  cm.PartCapRemain.Name,
-			Value: cm.PartCapRemain.DataInt,
-		}
+		partCapRemain := cm.PartCapRemain.DataInt * 1024 * 1024
+		out.PartCapRemain = &partCapRemain
 	}
 
 	if cm.PartCapMax.IsValid {
-		out.PartCapMax = &model.CapAttribute{
-			Name:  cm.PartCapMax.Name,
-			Value: cm.PartCapMax.DataInt,
-		}
+		partCapMax := cm.PartCapMax.DataInt * 1024 * 1024
+		out.PartCapMax = &partCapMax
 	}
 
 	if cm.Length.IsValid {
-		out.TapeLength = &model.CapAttribute{
-			Name:  cm.Length.Name,
-			Value: cm.Length.DataInt,
-		}
+		out.TapeLength = &cm.LoadCount.DataInt
 	}
 
 	if cm.Width.IsValid {
-		out.TapeWidth = &model.CapAttribute{
-			Name:  cm.Width.Name,
-			Value: uint64(float32(cm.Width.DataInt) / 10),
-		}
+		tapeWidth := uint64(float32(cm.Width.DataInt) / 10)
+		out.TapeWidth = &tapeWidth
 	}
 
 	if cm.MAMCapacity.IsValid {
@@ -426,29 +417,14 @@ func (cm *Cm) addCap(out *model.Attributes) {
 	}
 
 	if cm.LoadCount.IsValid {
-		out.CartridgeLoadCount = cm.LoadCount.DataInt
+		out.CartridgeLoadCount = &cm.LoadCount.DataInt
 	}
 
 	if cm.TotalWritten.IsValid && cm.TotalRead.IsValid {
-		out.TotalWritten = &model.CapAttribute{
-			Name:  "data written MiB",
-			Value: cm.TotalWritten.DataInt,
-		}
-		out.TotalRead = &model.CapAttribute{
-			Name:  "data read MiB",
-			Value: cm.TotalRead.DataInt,
-		}
-	}
-
-	if cm.TotalWrittenSession.IsValid && cm.TotalReadSession.IsValid {
-		out.WrittenSession = &model.CapAttribute{
-			Name:  "data written session MiB",
-			Value: cm.TotalWrittenSession.DataInt,
-		}
-		out.ReadSession = &model.CapAttribute{
-			Name:  "data read session MiB",
-			Value: cm.TotalReadSession.DataInt,
-		}
+		totalWritten := cm.TotalWritten.DataInt * 1024 * 1024
+		totalRead := cm.TotalRead.DataInt * 1024 * 1024
+		out.TotalWritten = &totalWritten
+		out.TotalRead = &totalRead
 	}
 }
 
@@ -466,10 +442,7 @@ func (cm *Cm) addType(out *model.Attributes) {
 		case 0x80:
 			friendlyName = "WORM (Write-once) cartridge"
 		}
-		out.CartridgeType = &model.StrAttribute{
-			Name:  cm.Type.Name,
-			Value: friendlyName,
-		}
+		out.CartridgeType = friendlyName
 	}
 }
 
@@ -521,18 +494,8 @@ func (cm *Cm) addSpecs(out *model.Attributes) {
 }
 
 func (cm *Cm) addOrg(out *model.Attributes) {
-	if cm.AssigningOrg.IsValid {
-		out.AssigningOrg = &model.StrAttribute{
-			Name:  cm.AssigningOrg.Name,
-			Value: cm.AssigningOrg.DataStr,
-		}
-	}
-	if cm.Manufacturer.IsValid {
-		out.Manufacturer = &model.StrAttribute{
-			Name:  cm.Manufacturer.Name,
-			Value: cm.Manufacturer.DataStr,
-		}
-	}
+	out.AssigningOrg = cm.AssigningOrg.DataStr
+	out.Manufacturer = cm.Manufacturer.DataStr
 
 	manufactureDate := cm.ManufactureDate.DataStr
 	if len(cm.ManufactureDate.DataStr) == 8 {
@@ -545,10 +508,5 @@ func (cm *Cm) addOrg(out *model.Attributes) {
 				cm.ManufactureDate.DataStr[0:4], cm.ManufactureDate.DataStr[4:6], cm.ManufactureDate.DataStr[6:8])
 		}
 	}
-	if manufactureDate != "" {
-		out.ManufactureDate = &model.StrAttribute{
-			Name:  cm.ManufactureDate.Name,
-			Value: manufactureDate,
-		}
-	}
+	out.ManufactureDate = manufactureDate
 }
