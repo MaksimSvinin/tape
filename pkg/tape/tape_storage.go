@@ -287,10 +287,16 @@ func (t *tape) readData(f *os.File, outPath string) (bool, error) {
 		}
 		start = false
 
-		if err != nil {
-			if errors.Is(err, io.EOF) {
+		if errors.Is(err, io.EOF) {
+			if n != 0 {
+				_, err = outFile.Write(buf[:n])
+				if err != nil {
+					return false, err
+				}
 				break
 			}
+			return false, err
+		} else if err != nil {
 			return false, err
 		}
 
